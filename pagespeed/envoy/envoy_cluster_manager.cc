@@ -137,4 +137,36 @@ EnvoyClusterManager::createBootstrapConfiguration(const std::string scheme, cons
   return bootstrap;
 }
 
+const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std::string str_url_, EnvoyFetch* fetcher){
+    // TODO(oschaaf): Expose kMinimalDelay in configuration.
+  const std::chrono::milliseconds kMinimalWorkerDelay = 500ms;
+  ASSERT(workers_.empty());
+  envoy::api::v2::core::HttpUri http_uri;
+  http_uri.set_uri(str_url_);
+  http_uri.set_cluster(getClusterName());
+  // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
+  // time. Let's assume we have two workers w0/w1, which should maintain a combined global pace of
+  // 1000Hz. w0 and w1 both run at 500Hz, but ideally their execution is evenly spaced in time,
+  // and not overlapping. Workers start offsets can be computed like
+  // "worker_number*(1/global_frequency))", which would yield T0+[0ms, 1ms]. This helps reduce
+  // batching/queueing effects, both initially, but also by calibrating the linear rate limiter we
+  // currently have to a precise starting time, which helps later on.
+  // TODO(oschaaf): Arguably, this ought to be the job of a rate limiter with awareness of the
+  // global status quo, which we do not have right now. This has been noted in the
+  // track-for-future issue.
+  const auto first_worker_start = time_system_.monotonicTime() + kMinimalWorkerDelay;
+  const double inter_worker_delay_usec =
+      (1./5) * 1000000 / 1;
+  int worker_number = 0;
+  while (workers_.size() < 1) {
+    const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        ((inter_worker_delay_usec * worker_number) * 1us));
+    workers_.push_back(std::make_unique<ClientWorkerImpl>(
+        *api_, tls_, store_root_, getClusterManager(str_url_), dispatcher_, worker_number,
+        first_worker_start + worker_delay,http_uri,fetcher));
+    worker_number++;
+  }
+  return workers_;
+}
+
 } // namespace net_instaweb

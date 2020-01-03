@@ -36,8 +36,12 @@
 #include "pagespeed/kernel/base/scoped_ptr.h"
 #include "pagespeed/kernel/base/string.h"
 #include "envoy_logger.h"
+#include "client_worker_impl.h"
+#include "client_worker.h"
 
 namespace net_instaweb {
+
+class Worker;
 
 // Implementation to create and manage envoy cluster configuration
 // Cluster manager gets created from manager factory for every url to be fetched
@@ -64,6 +68,7 @@ public:
    * @return std::string clusterName
    */
   const std::string getClusterName() const { return "cluster1"; }
+  const std::vector<ClientWorkerPtr>& createWorkers(const std::string str_url_, EnvoyFetch* fetcher);
 
 private:
   Envoy::ThreadLocal::InstanceImpl tls_;
@@ -91,6 +96,7 @@ private:
 
   envoy::config::bootstrap::v2::Bootstrap bootstrap;
   envoy::api::v2::core::Node envoy_node_{};
+  std::vector<ClientWorkerPtr> workers_;
 
   std::unique_ptr<Envoy::Upstream::ProdClusterManagerFactory> cluster_manager_factory_;
   std::unique_ptr<Envoy::Runtime::ScopedLoaderSingleton> runtime_singleton_;
@@ -103,6 +109,7 @@ private:
   const envoy::config::bootstrap::v2::Bootstrap
   createBootstrapConfiguration(const std::string scheme, const std::string host_name,
                                const int port) const;
+  
 };
 
 } // namespace net_instaweb

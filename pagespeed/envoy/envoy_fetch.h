@@ -105,7 +105,7 @@ private:
   bool content_length_known_;
 
   struct sockaddr_in sin_;
-
+  std::vector<ClientWorkerPtr> workers_;
   DISALLOW_COPY_AND_ASSIGN(EnvoyFetch);
 };
 

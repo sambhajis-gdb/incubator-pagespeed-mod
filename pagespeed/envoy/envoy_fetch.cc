@@ -77,23 +77,18 @@ EnvoyFetch::EnvoyFetch(const GoogleString& url,
 }
 
 void EnvoyFetch::FetchWithEnvoy() {
-  envoy::api::v2::core::HttpUri http_uri;
-  http_uri.set_uri(str_url_);
-  http_uri.set_cluster(cluster_manager_.getClusterName());
-  cb_ptr_ = std::make_unique<PagespeedDataFetcherCallback>(this);
-
-  std::unique_ptr<PagespeedRemoteDataFetcher> pagespeed_remote_data_fetch_ptr = 
-      std::make_unique<PagespeedRemoteDataFetcher>(cluster_manager_.getClusterManager(str_url_), http_uri, *cb_ptr_);
-
-  pagespeed_remote_data_fetch_ptr->fetch();
-  cluster_manager_.getDispatcher()->run(Envoy::Event::Dispatcher::RunType::Block);
+  const std::vector<ClientWorkerPtr>& workers =cluster_manager_.createWorkers(str_url_, this);
+  for (auto& w : workers_) {
+    w->start();
+  }
 }
 
 // This function is called by EnvoyUrlAsyncFetcher::StartFetch.
 void EnvoyFetch::Start() {
-  std::function<void()> fetch_fun_ptr = std::bind(&EnvoyFetch::FetchWithEnvoy, this);
-  cluster_manager_.getDispatcher()->post(fetch_fun_ptr);
-  cluster_manager_.getDispatcher()->run(Envoy::Event::Dispatcher::RunType::NonBlock);
+  FetchWithEnvoy();
+  // std::function<void()> fetch_fun_ptr = std::bind(&EnvoyFetch::FetchWithEnvoy, this);
+  // cluster_manager_.getDispatcher()->post(fetch_fun_ptr);
+  // cluster_manager_.getDispatcher()->run(Envoy::Event::Dispatcher::RunType::NonBlock);
 }
 
 bool EnvoyFetch::Init() {

@@ -41,6 +41,7 @@ class MessageHandler;
 class Statistics;
 class Variable;
 class EnvoyFetch;
+class EnvoyClusterManager;
 
 struct EnvoyStats {
   static const char kEnvoyFetchRequestCount[];
