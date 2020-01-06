@@ -47,6 +47,7 @@
 #include "external/envoy/source/server/config_validation/admin.h"
 #include "external/envoy/source/server/options_impl_platform.h"
 
+using namespace std::chrono_literals;
 namespace net_instaweb {
 
 EnvoyClusterManager::EnvoyClusterManager()

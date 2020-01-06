@@ -42,6 +42,7 @@
 namespace net_instaweb {
 
 class Worker;
+class EnvoyFetch;
 
 // Implementation to create and manage envoy cluster configuration
 // Cluster manager gets created from manager factory for every url to be fetched

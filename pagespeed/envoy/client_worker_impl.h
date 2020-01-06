@@ -14,12 +14,9 @@
 
 #include "external/envoy/source/common/common/logger.h"
 #include "external/envoy/source/common/http/context_impl.h"
-#include "envoy_cluster_manager.h"
 #include "worker_impl.h"
 #include "client_worker.h"
-#include "envoy_fetch.h"
 #include "pagespeed_remote_data_fetcher.h"
-
 #include "envoy/api/api.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/stats/store.h"
@@ -28,7 +25,7 @@
 
 namespace net_instaweb {
 
-class EnvoyFetch;
+
 
 class ClientWorkerImpl : public WorkerImpl,
                          virtual public ClientWorker,
@@ -41,15 +38,15 @@ public:
 
   bool success() const override { return success_; }
   void work();
-  //  cb_ptr_;
+  void fetchData();
   
 
 private:
-  void simpleWarmup();
+  
   const int worker_number_;
   const Envoy::MonotonicTime starting_time_;
   Envoy::Upstream::ClusterManager& cluster_manager_;
-  Envoy::Event::DispatcherPtr& dispatcher;
+  Envoy::Event::DispatcherPtr& dispatcher_;
   envoy::api::v2::core::HttpUri http_uri;
   EnvoyFetch* fetcher;
   bool success_{};

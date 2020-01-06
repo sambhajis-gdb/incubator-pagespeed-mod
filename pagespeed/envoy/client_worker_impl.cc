@@ -1,6 +1,5 @@
-#include "client_worker_impl.h"
-#include "envoy_fetch.h"
-#include "pagespeed_remote_data_fetcher.h"
+ #include "client_worker_impl.h"
+ #include "envoy_fetch.h"
 
 namespace net_instaweb {
 
@@ -11,24 +10,18 @@ ClientWorkerImpl::ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Ins
     : WorkerImpl(api, tls, store), worker_number_(worker_number), starting_time_(starting_time),
      cluster_manager_(cluster_manager_),dispatcher_(dispatcher),http_uri(http_uri),fetcher(fetcher){}
 
-void ClientWorkerImpl::simpleWarmup() {
-  // ENVOY_LOG(debug, "> worker {}: warmup start.", worker_number_);
-  // if (prefetch_connections_) {
-  //   benchmark_client_->prefetchPoolConnections();
-  // }
-  // benchmark_client_->tryStartOne([this] { dispatcher_->exit(); });
-  // dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
-  // ENVOY_LOG(debug, "> worker {}: warmup done.", worker_number_);
+void ClientWorkerImpl::fetchData() {
+    std::unique_ptr<PagespeedDataFetcherCallback> cb_ptr_ = std::make_unique<PagespeedDataFetcherCallback>(fetcher);
+  std::unique_ptr<PagespeedRemoteDataFetcher> pagespeed_remote_data_fetch_ptr = 
+      std::make_unique<PagespeedRemoteDataFetcher>(cluster_manager_, http_uri, *cb_ptr_);
+  pagespeed_remote_data_fetch_ptr->fetch();
+  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
 }
 
 void ClientWorkerImpl::work() {
-  std::unique_ptr<PagespeedDataFetcherCallback> cb_ptr_ = std::make_unique<PagespeedDataFetcherCallback>(fetcher);
-
-  std::unique_ptr<PagespeedRemoteDataFetcher> pagespeed_remote_data_fetch_ptr = 
-      std::make_unique<PagespeedRemoteDataFetcher>(cluster_manager_, http_uri, *cb_ptr_);
-
-  pagespeed_remote_data_fetch_ptr->fetch();
-  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
+  std::function<void()> fetch_fun_ptr = std::bind(&ClientWorkerImpl::fetchData, this);
+  dispatcher_->post(fetch_fun_ptr);
+  dispatcher_->run(Envoy::Event::Dispatcher::RunType::NonBlock);
 }
 
 

@@ -35,9 +35,6 @@
 
 namespace net_instaweb {
 
-class EnvoyUrlAsyncFetcher;
-class EnvoyFetch;
-
 class PagespeedDataFetcherCallback : public PagespeedRemoteDataFetcherCallback {
 public:
   PagespeedDataFetcherCallback(EnvoyFetch* fetch);
@@ -95,8 +92,6 @@ private:
   void FixHost();
 
   const GoogleString str_url_;
-  EnvoyUrlAsyncFetcher* fetcher_;
-  std::unique_ptr<PagespeedDataFetcherCallback> cb_ptr_;
   AsyncFetch* async_fetch_;
   MessageHandler* message_handler_;
   EnvoyClusterManager& cluster_manager_;

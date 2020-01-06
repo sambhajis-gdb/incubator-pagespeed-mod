@@ -67,7 +67,6 @@ EnvoyFetch::EnvoyFetch(const GoogleString& url,
                    MessageHandler* message_handler,
                    EnvoyClusterManager& cluster_manager)
     : str_url_(url),
-      fetcher_(NULL),
       async_fetch_(async_fetch),
       message_handler_(message_handler),
       cluster_manager_(cluster_manager),
@@ -78,7 +77,7 @@ EnvoyFetch::EnvoyFetch(const GoogleString& url,
 
 void EnvoyFetch::FetchWithEnvoy() {
   const std::vector<ClientWorkerPtr>& workers =cluster_manager_.createWorkers(str_url_, this);
-  for (auto& w : workers_) {
+  for (auto& w : workers) {
     w->start();
   }
 }
@@ -86,10 +85,7 @@ void EnvoyFetch::FetchWithEnvoy() {
 // This function is called by EnvoyUrlAsyncFetcher::StartFetch.
 void EnvoyFetch::Start() {
   FetchWithEnvoy();
-  // std::function<void()> fetch_fun_ptr = std::bind(&EnvoyFetch::FetchWithEnvoy, this);
-  // cluster_manager_.getDispatcher()->post(fetch_fun_ptr);
-  // cluster_manager_.getDispatcher()->run(Envoy::Event::Dispatcher::RunType::NonBlock);
-}
+  }
 
 bool EnvoyFetch::Init() {
   return true;

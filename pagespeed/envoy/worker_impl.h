@@ -6,7 +6,6 @@
 
 #include "external/envoy/source/common/common/logger.h"
 #include "worker.h"
-#include "envoy_fetch.h"
 
 namespace net_instaweb {
 
@@ -31,7 +30,6 @@ protected:
   Envoy::ThreadLocal::Instance& tls_;
   Envoy::Stats::Store& store_;
   Envoy::TimeSource& time_source_;
-  EnvoyFetch* fetcher;
 
 private:
   Envoy::Thread::ThreadPtr thread_;
