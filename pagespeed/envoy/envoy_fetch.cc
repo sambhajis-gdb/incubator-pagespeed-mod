@@ -64,22 +64,21 @@ void PagespeedDataFetcherCallback::onFailure(FailureReason reason) {
 
 EnvoyFetch::EnvoyFetch(const GoogleString& url,
                    AsyncFetch* async_fetch,
-                   MessageHandler* message_handler,
-                   EnvoyClusterManager& cluster_manager)
+                   MessageHandler* message_handler)
     : str_url_(url),
       async_fetch_(async_fetch),
       message_handler_(message_handler),
-      cluster_manager_(cluster_manager),
       done_(false),
       content_length_(-1),
       content_length_known_(false) {
 }
 
 void EnvoyFetch::FetchWithEnvoy() {
-  const std::vector<ClientWorkerPtr>& workers =cluster_manager_.createWorkers(str_url_, this);
+  cluster_manager_ptr_ = std::make_unique<EnvoyClusterManager>();
+  const std::vector<ClientWorkerPtr>& workers = cluster_manager_ptr_->createWorkers(str_url_, this);
   for (auto& w : workers) {
     w->start();
-    w->waitForCompletion();
+    // w->waitForCompletion();
   }
 }
 

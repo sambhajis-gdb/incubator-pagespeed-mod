@@ -31,7 +31,6 @@
 #include "pagespeed/kernel/base/string.h"
 #include "pagespeed/kernel/base/thread_system.h"
 #include "envoy_fetch.h"
-#include "envoy_cluster_manager.h"
 #include "envoy_logger.h"
 
 namespace net_instaweb {
@@ -125,7 +124,7 @@ private:
 
   EnvoyFetchPool active_fetches_;
 
-  std::unique_ptr<EnvoyClusterManager> cluster_manager_ptr_;
+  // std::unique_ptr<EnvoyClusterManager> cluster_manager_ptr_;
   std::unique_ptr<PagespeedLogSink> envoy_log_sink_;
   EnvoyFetchPool pending_fetches_;
   EnvoyFetchPool completed_fetches_;

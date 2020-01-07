@@ -15,13 +15,13 @@ void ClientWorkerImpl::fetchData() {
   std::unique_ptr<PagespeedRemoteDataFetcher> pagespeed_remote_data_fetch_ptr = 
       std::make_unique<PagespeedRemoteDataFetcher>(cluster_manager_, http_uri, *cb_ptr_);
   pagespeed_remote_data_fetch_ptr->fetch();
-  // dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
+  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
 }
 
 void ClientWorkerImpl::work() {
   std::function<void()> fetch_fun_ptr = std::bind(&ClientWorkerImpl::fetchData, this);
   dispatcher_->post(fetch_fun_ptr);
-  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
+  dispatcher_->run(Envoy::Event::Dispatcher::RunType::NonBlock);
   dispatcher_->exit();
 }
 

@@ -55,7 +55,7 @@ EnvoyClusterManager::EnvoyClusterManager()
       validation_context_(false, false), init_manager_("init_manager"),
       stats_allocator_(symbol_table_), store_root_(stats_allocator_),
       http_context_(store_root_.symbolTable()) {
-  initClusterManager();
+  
 }
 
 EnvoyClusterManager::~EnvoyClusterManager() {
@@ -140,14 +140,14 @@ EnvoyClusterManager::createBootstrapConfiguration(const std::string scheme, cons
 }
 
 const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std::string str_url_, EnvoyFetch* fetcher){
-  
-  // Envoy::Upstream::ClusterManager& cluster_manager_obj = getClusterManager(str_url_);
-  // TODO(oschaaf): Expose kMinimalDelay in configuration.
-  const std::chrono::milliseconds kMinimalWorkerDelay = 500ms;
-  ASSERT(workers_.empty());
+  initClusterManager();
   envoy::api::v2::core::HttpUri http_uri;
   http_uri.set_uri(str_url_);
   http_uri.set_cluster(getClusterName());
+  
+  // TODO(oschaaf): Expose kMinimalDelay in configuration.
+  const std::chrono::milliseconds kMinimalWorkerDelay = 500ms;
+  ASSERT(workers_.empty());
   // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
   // time. Let's assume we have two workers w0/w1, which should maintain a combined global pace of
   // 1000Hz. w0 and w1 both run at 500Hz, but ideally their execution is evenly spaced in time,

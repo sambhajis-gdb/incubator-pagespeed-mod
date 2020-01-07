@@ -32,6 +32,7 @@
 #include "pagespeed/kernel/http/response_headers.h"
 #include "pagespeed/kernel/http/response_headers_parser.h"
 #include "pagespeed_remote_data_fetcher.h"
+#include "envoy_cluster_manager.h"
 
 namespace net_instaweb {
 
@@ -59,8 +60,7 @@ class EnvoyFetch : public PoolElement<EnvoyFetch> {
 public:
  EnvoyFetch(const GoogleString& url,
            AsyncFetch* async_fetch,
-           MessageHandler* message_handler,
-           EnvoyClusterManager& cluster_manager);
+           MessageHandler* message_handler);
 
   /**
    * This function starts fetching url by posting an event to dispatcher
@@ -94,7 +94,7 @@ private:
   const GoogleString str_url_;
   AsyncFetch* async_fetch_;
   MessageHandler* message_handler_;
-  EnvoyClusterManager& cluster_manager_;
+  std::unique_ptr<EnvoyClusterManager> cluster_manager_ptr_;
   bool done_;
   int64 content_length_;
   bool content_length_known_;
