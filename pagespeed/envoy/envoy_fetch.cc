@@ -79,6 +79,7 @@ void EnvoyFetch::FetchWithEnvoy() {
   const std::vector<ClientWorkerPtr>& workers =cluster_manager_.createWorkers(str_url_, this);
   for (auto& w : workers) {
     w->start();
+    w->waitForCompletion();
   }
 }
 

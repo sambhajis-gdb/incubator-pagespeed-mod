@@ -84,20 +84,24 @@ void EnvoyClusterManager::initClusterManager() {
   api_ = std::make_unique<Envoy::Api::Impl>(platform_impl_.threadFactory(), store_root_,
                                             time_system_, platform_impl_.fileSystem());
   dispatcher_ = api_->allocateDispatcher();
-
-  tls_.registerThread(*dispatcher_, true);
-  store_root_.initializeThreading(*dispatcher_, tls_);
-
+  
   access_log_manager_ = new Envoy::AccessLog::AccessLogManagerImpl(
       std::chrono::milliseconds(1000), *api_, *dispatcher_, access_log_lock_, store_root_);
+  
+  singleton_manager_ = std::make_unique<Envoy::Singleton::ManagerImpl>(api_->threadFactory());
 
+}
+
+Envoy::Upstream::ClusterManager&
+EnvoyClusterManager::getClusterManager(const GoogleString str_url_) {
+tls_.registerThread(*dispatcher_, true);
+  store_root_.initializeThreading(*dispatcher_, tls_);
   runtime_singleton_ = std::make_unique<Envoy::Runtime::ScopedLoaderSingleton>(
       Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(
           *dispatcher_, tls_, {}, *local_info_, init_manager_, store_root_, generator_,
           Envoy::ProtobufMessage::getStrictValidationVisitor(), *api_)});
 
-  singleton_manager_ = std::make_unique<Envoy::Singleton::ManagerImpl>(api_->threadFactory());
-  Envoy::Runtime::LoaderSingleton::get();
+ 
 
   ssl_context_manager_ =
       std::make_unique<Envoy::Extensions::TransportSockets::Tls::ContextManagerImpl>(time_system_);
@@ -107,10 +111,6 @@ void EnvoyClusterManager::initClusterManager() {
       dispatcher_->createDnsResolver({}), *ssl_context_manager_, *dispatcher_, *local_info_,
       secret_manager_, validation_context_, *api_, http_context_, *access_log_manager_,
       *singleton_manager_);
-}
-
-Envoy::Upstream::ClusterManager&
-EnvoyClusterManager::getClusterManager(const GoogleString str_url_) {
   const std::string host_name = "127.0.0.1";
   const std::string scheme = "http";
   auto port = 80;
@@ -118,6 +118,7 @@ EnvoyClusterManager::getClusterManager(const GoogleString str_url_) {
   cluster_manager_ = cluster_manager_factory_->clusterManagerFromProto(
       createBootstrapConfiguration(scheme, host_name, port));
   cluster_manager_->setInitializedCb([this]() -> void { init_manager_.initialize(init_watcher_); });
+  Envoy::Runtime::LoaderSingleton::get().initialize(*cluster_manager_);
   return *cluster_manager_;
 }
 
@@ -139,7 +140,9 @@ EnvoyClusterManager::createBootstrapConfiguration(const std::string scheme, cons
 }
 
 const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std::string str_url_, EnvoyFetch* fetcher){
-    // TODO(oschaaf): Expose kMinimalDelay in configuration.
+  
+  // Envoy::Upstream::ClusterManager& cluster_manager_obj = getClusterManager(str_url_);
+  // TODO(oschaaf): Expose kMinimalDelay in configuration.
   const std::chrono::milliseconds kMinimalWorkerDelay = 500ms;
   ASSERT(workers_.empty());
   envoy::api::v2::core::HttpUri http_uri;
@@ -163,7 +166,7 @@ const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std
     const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
         ((inter_worker_delay_usec * worker_number) * 1us));
     workers_.push_back(std::make_unique<ClientWorkerImpl>(
-        *api_, tls_, store_root_, getClusterManager(str_url_), dispatcher_, worker_number,
+        *api_, tls_, store_root_,  getClusterManager(str_url_), worker_number,
         first_worker_start + worker_delay,http_uri,fetcher));
     worker_number++;
   }

@@ -33,7 +33,7 @@ class ClientWorkerImpl : public WorkerImpl,
 public:
   ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,Envoy::Stats::Store& store, 
                    Envoy::Upstream::ClusterManager& cluster_manager_,
-                   Envoy::Event::DispatcherPtr& dispatcher, const int worker_number,
+                   const int worker_number,
                    const Envoy::MonotonicTime starting_time, envoy::api::v2::core::HttpUri http_uri, EnvoyFetch* fetcher);
 
   bool success() const override { return success_; }
@@ -46,7 +46,7 @@ private:
   const int worker_number_;
   const Envoy::MonotonicTime starting_time_;
   Envoy::Upstream::ClusterManager& cluster_manager_;
-  Envoy::Event::DispatcherPtr& dispatcher_;
+  // Envoy::Event::DispatcherPtr& dispatcher_;
   envoy::api::v2::core::HttpUri http_uri;
   EnvoyFetch* fetcher;
   bool success_{};
