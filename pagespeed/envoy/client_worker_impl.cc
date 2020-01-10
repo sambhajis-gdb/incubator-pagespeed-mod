@@ -19,7 +19,7 @@ void ClientWorkerImpl::work(Envoy::Upstream::ClusterManager& cm) {
   pagespeed_remote_data_fetch_ptr->fetch();
   dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
   });
-  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
+  dispatcher_->run(Envoy::Event::Dispatcher::RunType::NonBlock);
 }
 
 

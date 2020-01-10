@@ -79,7 +79,10 @@ void EnvoyFetch::FetchWithEnvoy() {
   for (auto& w : workers) {
        Envoy::Upstream::ClusterManager& cluster_manager_ = cluster_manager_ptr_->getClusterManager(str_url_);
        w->start(cluster_manager_);
-       w->waitForCompletion();
+  }
+
+  for (auto& w : workers) {
+      w->waitForCompletion();
   }
 }
 
@@ -94,7 +97,6 @@ bool EnvoyFetch::Init() {
 
 void EnvoyFetch::setResponse(Envoy::Http::HeaderMap& headers,
                              Envoy::Buffer::InstancePtr& response_body) {
-
   ResponseHeaders* res_header = async_fetch_->response_headers();
   std::unique_ptr<ResponseHeaders> response_headers_ptr = HeaderUtils::toPageSpeedResponseHeaders(headers);
   res_header->CopyFrom(*response_headers_ptr);

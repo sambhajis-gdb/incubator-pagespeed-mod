@@ -18,6 +18,7 @@ void WorkerImpl::start(Envoy::Upstream::ClusterManager& cluster_manager_) {
   ASSERT(!started_ && !completed_);
   started_ = true;
   thread_ = thread_factory_.createThread([&,this]() {
+    dispatcher_->run(Envoy::Event::Dispatcher::RunType::NonBlock);
     work(cluster_manager_);
   });
 }
