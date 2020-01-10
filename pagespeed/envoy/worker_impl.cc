@@ -14,14 +14,11 @@ WorkerImpl::WorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
 
 WorkerImpl::~WorkerImpl() { tls_.shutdownThread(); }
 
-void WorkerImpl::start() {
+void WorkerImpl::start(Envoy::Upstream::ClusterManager& cluster_manager_) {
   ASSERT(!started_ && !completed_);
   started_ = true;
-  thread_ = thread_factory_.createThread([this]() {
-    ASSERT(Envoy::Runtime::LoaderSingleton::getExisting() != nullptr);
-    // Run the dispatcher to let the callbacks posted by registerThread() execute.
-    dispatcher_->run(Envoy::Event::Dispatcher::RunType::NonBlock);
-    work();
+  thread_ = thread_factory_.createThread([&,this]() {
+    work(cluster_manager_);
   });
 }
 

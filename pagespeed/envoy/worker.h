@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "envoy/common/pure.h"
+#include "external/envoy/source/common/upstream/cluster_manager_impl.h"
 
 
 namespace net_instaweb {
@@ -17,7 +18,7 @@ public:
   /**
    * Start the worker thread.
    */
-  virtual void start() PURE;
+  virtual void start(Envoy::Upstream::ClusterManager& cm) PURE;
 
   /**
    * Wait for the worker thread to complete its work.

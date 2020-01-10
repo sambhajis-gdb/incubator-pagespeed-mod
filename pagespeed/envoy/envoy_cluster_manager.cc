@@ -166,7 +166,7 @@ const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std
     const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
         ((inter_worker_delay_usec * worker_number) * 1us));
     workers_.push_back(std::make_unique<ClientWorkerImpl>(
-        *api_, tls_, store_root_,  getClusterManager(str_url_), worker_number,
+        *api_, tls_, store_root_, worker_number,
         first_worker_start + worker_delay,http_uri,fetcher));
     worker_number++;
   }

@@ -77,8 +77,9 @@ void EnvoyFetch::FetchWithEnvoy() {
   cluster_manager_ptr_ = std::make_unique<EnvoyClusterManager>();
   const std::vector<ClientWorkerPtr>& workers = cluster_manager_ptr_->createWorkers(str_url_, this);
   for (auto& w : workers) {
-    w->start();
-    // w->waitForCompletion();
+       Envoy::Upstream::ClusterManager& cluster_manager_ = cluster_manager_ptr_->getClusterManager(str_url_);
+       w->start(cluster_manager_);
+       w->waitForCompletion();
   }
 }
 
