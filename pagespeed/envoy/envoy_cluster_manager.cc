@@ -55,7 +55,6 @@ EnvoyClusterManager::EnvoyClusterManager()
       validation_context_(false, false), init_manager_("init_manager"),
       stats_allocator_(symbol_table_), store_root_(stats_allocator_),
       http_context_(store_root_.symbolTable()) {
-  
 }
 
 EnvoyClusterManager::~EnvoyClusterManager() {
@@ -74,9 +73,7 @@ void configureComponentLogLevels(spdlog::level::level_enum level) {
 }
 
 void EnvoyClusterManager::initClusterManager() {
-
   configureComponentLogLevels(spdlog::level::from_str("error"));
-
   local_info_ = std::make_unique<Envoy::LocalInfo::LocalInfoImpl>(
       envoy_node_, Envoy::Network::Utility::getLocalAddress(Envoy::Network::Address::IpVersion::v4),
       "envoyfetcher_service_zone", "envoyfetcher_service_cluster", "envoyfetcher_service_node");
@@ -84,12 +81,11 @@ void EnvoyClusterManager::initClusterManager() {
   api_ = std::make_unique<Envoy::Api::Impl>(platform_impl_.threadFactory(), store_root_,
                                             time_system_, platform_impl_.fileSystem());
   dispatcher_ = api_->allocateDispatcher();
-  
+
   access_log_manager_ = new Envoy::AccessLog::AccessLogManagerImpl(
       std::chrono::milliseconds(1000), *api_, *dispatcher_, access_log_lock_, store_root_);
-  
-  singleton_manager_ = std::make_unique<Envoy::Singleton::ManagerImpl>(api_->threadFactory());
 
+  singleton_manager_ = std::make_unique<Envoy::Singleton::ManagerImpl>(api_->threadFactory());
 }
 
 Envoy::Upstream::ClusterManager&
@@ -100,8 +96,6 @@ tls_.registerThread(*dispatcher_, true);
       Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(
           *dispatcher_, tls_, {}, *local_info_, init_manager_, store_root_, generator_,
           Envoy::ProtobufMessage::getStrictValidationVisitor(), *api_)});
-
- 
 
   ssl_context_manager_ =
       std::make_unique<Envoy::Extensions::TransportSockets::Tls::ContextManagerImpl>(time_system_);
@@ -139,12 +133,8 @@ EnvoyClusterManager::createBootstrapConfiguration(const std::string scheme, cons
   return bootstrap;
 }
 
-const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std::string str_url_, EnvoyFetch* fetcher){
+void EnvoyClusterManager::createWorkers(){
   initClusterManager();
-  envoy::api::v2::core::HttpUri http_uri;
-  http_uri.set_uri(str_url_);
-  http_uri.set_cluster(getClusterName());
-  
   // TODO(oschaaf): Expose kMinimalDelay in configuration.
   const std::chrono::milliseconds kMinimalWorkerDelay = 500ms;
   ASSERT(workers_.empty());
@@ -162,15 +152,19 @@ const std::vector<ClientWorkerPtr>& EnvoyClusterManager::createWorkers(const std
   const double inter_worker_delay_usec =
       (1./5) * 1000000 / 1;
   int worker_number = 0;
+  //temporery taking only one worker in future it should be equal to concurrency.
   while (workers_.size() < 1) {
     const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
         ((inter_worker_delay_usec * worker_number) * 1us));
     workers_.push_back(std::make_unique<ClientWorkerImpl>(
         *api_, tls_, store_root_, worker_number,
-        first_worker_start + worker_delay,http_uri,fetcher));
+        first_worker_start + worker_delay));
     worker_number++;
   }
-  return workers_;
+}
+
+ClientWorkerPtr& EnvoyClusterManager::getAvailableWorker(){
+  return workers_[0];
 }
 
 } // namespace net_instaweb

@@ -14,12 +14,12 @@ WorkerImpl::WorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
 
 WorkerImpl::~WorkerImpl() { tls_.shutdownThread(); }
 
-void WorkerImpl::start(Envoy::Upstream::ClusterManager& cluster_manager_) {
+void WorkerImpl::start(Envoy::Upstream::ClusterManager& cluster_manager_, envoy::api::v2::core::HttpUri http_uri, EnvoyFetch* fetch) {
   ASSERT(!started_ && !completed_);
   started_ = true;
-  thread_ = thread_factory_.createThread([&,this]() {
+  thread_ = thread_factory_.createThread([&,http_uri, fetch, this]() {
     dispatcher_->run(Envoy::Event::Dispatcher::RunType::NonBlock);
-    work(cluster_manager_);
+    work(cluster_manager_,http_uri,fetch);
   });
 }
 

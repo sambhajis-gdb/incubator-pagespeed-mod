@@ -124,7 +124,7 @@ private:
 
   EnvoyFetchPool active_fetches_;
 
-  // std::unique_ptr<EnvoyClusterManager> cluster_manager_ptr_;
+  std::unique_ptr<EnvoyClusterManager> cluster_manager_ptr_;
   std::unique_ptr<PagespeedLogSink> envoy_log_sink_;
   EnvoyFetchPool pending_fetches_;
   EnvoyFetchPool completed_fetches_;

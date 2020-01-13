@@ -64,32 +64,33 @@ void PagespeedDataFetcherCallback::onFailure(FailureReason reason) {
 
 EnvoyFetch::EnvoyFetch(const GoogleString& url,
                    AsyncFetch* async_fetch,
-                   MessageHandler* message_handler)
+                   MessageHandler* message_handler,
+                   EnvoyClusterManager& cluster_manager)
     : str_url_(url),
       async_fetch_(async_fetch),
       message_handler_(message_handler),
       done_(false),
       content_length_(-1),
-      content_length_known_(false) {
+      content_length_known_(false),
+      cluster_manager_(cluster_manager) {
 }
 
 void EnvoyFetch::FetchWithEnvoy() {
-  cluster_manager_ptr_ = std::make_unique<EnvoyClusterManager>();
-  const std::vector<ClientWorkerPtr>& workers = cluster_manager_ptr_->createWorkers(str_url_, this);
-  for (auto& w : workers) {
-       Envoy::Upstream::ClusterManager& cluster_manager_ = cluster_manager_ptr_->getClusterManager(str_url_);
-       w->start(cluster_manager_);
-  }
+  ClientWorkerPtr& worker = cluster_manager_.getAvailableWorker();
+  Envoy::Upstream::ClusterManager& envoy_cluster_manager_ =
+      cluster_manager_.getClusterManager(str_url_);
 
-  for (auto& w : workers) {
-      w->waitForCompletion();
-  }
+  envoy::api::v2::core::HttpUri http_uri;
+  http_uri.set_uri(str_url_);
+  http_uri.set_cluster(cluster_manager_.getClusterName());
+  worker->start(envoy_cluster_manager_, http_uri, this);
+  worker->waitForCompletion();
 }
 
 // This function is called by EnvoyUrlAsyncFetcher::StartFetch.
 void EnvoyFetch::Start() {
   FetchWithEnvoy();
-  }
+}
 
 bool EnvoyFetch::Init() {
   return true;

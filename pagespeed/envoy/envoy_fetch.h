@@ -60,7 +60,8 @@ class EnvoyFetch : public PoolElement<EnvoyFetch> {
 public:
  EnvoyFetch(const GoogleString& url,
            AsyncFetch* async_fetch,
-           MessageHandler* message_handler);
+           MessageHandler* message_handler,
+           EnvoyClusterManager& cluster_manager);
 
   /**
    * This function starts fetching url by posting an event to dispatcher
@@ -94,12 +95,11 @@ private:
   const GoogleString str_url_;
   AsyncFetch* async_fetch_;
   MessageHandler* message_handler_;
-  std::unique_ptr<EnvoyClusterManager> cluster_manager_ptr_;
+  EnvoyClusterManager& cluster_manager_;
   bool done_;
   int64 content_length_;
   bool content_length_known_;
   struct sockaddr_in sin_;
-  std::vector<ClientWorkerPtr> workers_;
   DISALLOW_COPY_AND_ASSIGN(EnvoyFetch);
 };
 

@@ -69,7 +69,8 @@ public:
    * @return std::string clusterName
    */
   const std::string getClusterName() const { return "cluster1"; }
-  const std::vector<ClientWorkerPtr>& createWorkers(const std::string str_url_, EnvoyFetch* fetcher);
+  void createWorkers();
+  ClientWorkerPtr& getAvailableWorker();
 
 private:
   Envoy::ThreadLocal::InstanceImpl tls_;

@@ -23,6 +23,7 @@
 #include "envoy/thread_local/thread_local.h"
 
 
+
 namespace net_instaweb {
 
 
@@ -33,10 +34,10 @@ class ClientWorkerImpl : public WorkerImpl,
 public:
   ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,Envoy::Stats::Store& store, 
                    const int worker_number,
-                   const Envoy::MonotonicTime starting_time, envoy::api::v2::core::HttpUri http_uri, EnvoyFetch* fetcher);
+                   const Envoy::MonotonicTime starting_time);
 
   bool success() const override { return success_; }
-  void work(Envoy::Upstream::ClusterManager& cm);
+  void work(Envoy::Upstream::ClusterManager& cm, envoy::api::v2::core::HttpUri http_uri, EnvoyFetch* fetch);
   void fetchData();
   
 
@@ -45,7 +46,6 @@ private:
   const int worker_number_;
   const Envoy::MonotonicTime starting_time_;
   envoy::api::v2::core::HttpUri http_uri;
-  EnvoyFetch* fetcher;
   bool success_{};
 };
 
